@@ -11,27 +11,34 @@ class App extends Component {
   constructor(props){
     super(props);
     this.state = ({
-      series:[],
+      ofertas:[],
       pos:null,
       titulo:'Nuevo',
+      oferta:'',
       id:0,
-      nombre:'',
-      fecha:'',
-      rating:'0',
-      categoria:''
+      empresa:'',
+      perfil:'',
+      nivel:'',
+      fecha:''
     })
-    this.cambioNombre = this.cambioNombre.bind(this);
+    this.cambioOferta = this.cambioOferta.bind(this);
+    this.cambioEmpresa = this.cambioEmpresa.bind(this);
+    this.cambioPerfil = this.cambioPerfil.bind(this);
+    this.cambioNivel = this.cambioNivel.bind(this);
     this.cambioFecha = this.cambioFecha.bind(this);
-    this.cambioRating = this.cambioRating.bind(this);
-    this.cambioCategoria = this.cambioCategoria.bind(this);
     this.mostrar = this.mostrar.bind(this);
     this.eliminar = this.eliminar.bind(this);
     this.guardar = this.guardar.bind(this);
   }
 
-  cambioNombre(e){
+  cambioEmpresa(e){
     this.setState({
-      nombre: e.target.value
+      empresa: e.target.value
+    })
+  }
+  cambioOferta(e){
+    this.setState({
+      oferta: e.target.value
     })
   }
 
@@ -41,35 +48,36 @@ class App extends Component {
     })
   }
 
-  cambioRating(e){
+  cambioPerfil(e){
     this.setState({
-      rating: e.target.value
+      perfil: e.target.value
     })
   }
 
-  cambioCategoria(e){
+  cambioNivel(e){
     this.setState({
-      categoria: e.target.value
+      nivel: e.target.value
     })
   }
   componentDidMount(){
-    axios.get('http://localhost:8000/series')
+    axios.get('http://localhost:8000/api/ofertas')
     .then(res =>{
       console.log(res.data);
-      this.setState({series: res.data})
+      this.setState({ofertas: res.data})
     })
   }
   mostrar(cod,index){
-    axios.get('http://localhost:8000/serie/'+cod)
+    axios.get('http://localhost:8000/api/oferta/'+cod)
     .then(res => {
       this.setState({
         pos: index,
         titulo: 'Editar',
         id: res.data.id,
-        nombre :res.data.name,
-        fecha: res.data.release_date,
-        rating: res.data.rating,
-        categoria : res.data.category
+        oferta :res.data.titulo,
+        empresa: res.data.empresa,
+        perfil: res.data.perfil,
+        nivel : res.data.nivel,
+        fecha : res.data.pub_date
       })
     })
   }
@@ -77,44 +85,47 @@ class App extends Component {
     e.preventDefault();
     let cod = this.state.id;
     const datos = {
-      name: this.state.nombre,
-      release_date: this.state.fecha,
-      rating: this.state.rating,
-      category: this.state.categoria
+      titulo: this.state.oferta,
+      empresa: this.state.empresa,
+      perfil: this.state.perfil,
+      nivel: this.state.nivel,
+      pub_date : this.state.fecha
     }
     if(cod>0){
       //edición de un registro
-      axios.put('http://localhost:8000/serie/'+cod,datos)
+      axios.put('http://localhost:8000/api/oferta/'+cod,datos)
       .then(res =>{
         let indx = this.state.pos;
-        this.state.series[indx] = res.data;
-        var temp = this.state.series;
+        this.state.ofertas[indx] = res.data;
+        var temp = this.state.ofertas;
         this.setState({
           pos:null,
           titulo:'Nuevo',
           id:0,
-          nombre:'',
+          oferta:'',
+          empresa:'',
+          perfil:0,
+          nivel:'',
           fecha:'',
-          rating:0,
-          categoria:'',
-          series: temp
+          ofertas: temp
         });
       }).catch((error) =>{
         console.log(error.toString());
       });
     }else{
       //nuevo registro
-      axios.post('http://localhost:8000/series',datos)
+      axios.post('http://localhost:8000/api/ofertas',datos)
       .then(res => {
-        this.state.series.push(res.data);
-        var temp = this.state.series;
+        this.state.ofertas.push(res.data);
+        var temp = this.state.ofertas;
         this.setState({
           id:0,
-          nombre:'',
-          fecha: '',
-          rating:0,
-          categoria:'',
-          series:temp
+          oferta:'',
+          empresa:'',
+          perfil:'',
+          nivel:'',
+          fecha:'',
+          ofertas: temp
         });
       }).catch((error)=>{
         console.log(error.toString());
@@ -124,11 +135,11 @@ class App extends Component {
   eliminar(cod){
     let rpta = window.confirm("Desea Eliminar?");
     if(rpta){
-      axios.delete('http://localhost:8000/serie/'+cod)
+      axios.delete('http://localhost:8000/api/oferta/'+cod)
       .then(res =>{
-        var temp = this.state.series.filter((serie)=>serie.id !== cod);
+        var temp = this.state.ofertas.filter((oferta_laboral)=>oferta_laboral.id !== cod);
         this.setState({
-          series: temp
+          ofertas: temp
         })
       })
     }
@@ -142,25 +153,27 @@ class App extends Component {
                 <thead>
                   <tr>
                     <th>#</th>
-                    <th>Nombre</th>
-                    <th>Fecha</th>
-                    <th>Rating</th>
-                    <th>Categoria</th>
-                    <th>Acciones</th>
+                    <th>Titulo</th>
+                    <th>Empresa</th>
+                    <th>Perfil</th>
+                    <th>Nivel</th>
+                    <th>Fecha de publicación</th>
+                    <th>Opciones</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {this.state.series.map( (serie,index) =>{
+                  {this.state.ofertas.map( (oferta_laboral,index) =>{
                     return (
-                      <tr key={serie.id}>
-                        <td>{serie.id}</td>
-                        <td>{serie.name}</td>
-                        <td>{serie.release_date}</td>
-                        <td>{serie.rating}</td>
-                        <td>{serie.category}</td>
+                      <tr key={oferta_laboral.id}>
+                        <td>{oferta_laboral.id}</td>
+                        <td>{oferta_laboral.titulo}</td>
+                        <td>{oferta_laboral.empresa}</td>
+                        <td>{oferta_laboral.perfil}</td>
+                        <td>{oferta_laboral.nivel}</td>
+                        <td>{oferta_laboral.pub_date}</td>
                         <td>
-                        <Button variant="success" onClick={()=>this.mostrar(serie.id,index)}>Editar</Button>
-                        <Button variant="danger" onClick={()=>this.eliminar(serie.id)}>Eliminar</Button>
+                        <Button variant="warning" onClick={()=>this.mostrar(oferta_laboral.id,index)}>Editar</Button>
+                        <Button variant="danger" onClick={()=>this.eliminar(oferta_laboral.id)}>Eliminar</Button>
                         </td>
                       </tr>
                     );
@@ -172,16 +185,27 @@ class App extends Component {
               <Form onSubmit={this.guardar}>
                 <Form.Control type="hidden" value={this.state.id} />
                 <Form.Group className="mb-3">
-                  <Form.Label>Ingrese Nombre:</Form.Label>
-                  <Form.Control type="text" value={this.state.nombre} onChange={this.cambioNombre} />
+                  <Form.Label>Ingrese el Titulo de la oferta:</Form.Label>
+                  <Form.Control type="text" value={this.state.oferta} onChange={this.cambioOferta} />
                 </Form.Group>
                 <Form.Group className="mb-3">
-                  <Form.Label>Ingrese Rating:</Form.Label>
-                  <Form.Control type="number" value={this.state.rating} onChange={this.cambioRating} />
+                  <Form.Label>Ingrese el nombre de la Empresa:</Form.Label>
+                  <Form.Control type="text" value={this.state.empresa} onChange={this.cambioEmpresa} />
                 </Form.Group>
                 <Form.Group className="mb-3">
-                  <Form.Label>Categoria:</Form.Label>
-                  <Form.Control type="text" value={this.state.categoria} onChange={this.cambioCategoria} />
+                  <Form.Label>Perfil:</Form.Label>
+                  <Form.Select value={this.state.perfil} onChange={this.cambioPerfil}>
+                    <option value="BackEnd" name="BackEnd">BackEnd</option>
+                    <option value="FrontEnd" name="FrontEnd">FrontEnd</option>
+                  </Form.Select>
+                </Form.Group>
+                <Form.Group className="mb-3">
+                  <Form.Label>Nivel:</Form.Label>
+                  <Form.Select value={this.state.nivel} onChange={this.cambioNivel}>
+                    <option value="Junior" name="Junior">Junior</option>
+                    <option value="Semisenior" name="Semisenior">Semisenior</option>
+                    <option value="Senior" name="Senior">Senior</option>
+                  </Form.Select>
                 </Form.Group>
                 <Form.Group className="mb-3">
                   <Form.Label>Fecha:</Form.Label>
